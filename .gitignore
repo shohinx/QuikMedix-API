@@ -16,11 +16,7 @@ yarn-error.log
 /public/feedb
 /public/imports
 /public/libs
-artisan
-composer.json
-composer.lock
 package-lock.json	
-package.json
 .DS_Store
 public/01.pdf
 public/DS2.pdf
