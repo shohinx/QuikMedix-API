@@ -3,7 +3,7 @@
   "type": "project",
   "description": "QuikMedix API",
   "require": {
-    "php": "^8.0",
+    "php": "^8.4",
     "authorizenet/authorizenet": "2.0.4",
     "aws/aws-sdk-php": "3.388.4",
     "barryvdh/laravel-dompdf": "1.0.2",
