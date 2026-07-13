@@ -21,6 +21,7 @@
     "predis/predis": "^1.1",
     "pusher/pusher-push-notifications": "2.0",
     "smalot/pdfparser": "0.18.2",
+    "square/square": "40.0.0.20250123",
     "stripe/stripe-php": "7.128.0",
     "twilio/sdk": "6.44.4",
     "zadarma/user-api-v1": "1.1.9"

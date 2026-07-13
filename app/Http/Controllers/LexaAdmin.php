@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
 use URL;
 use Smalot\PdfParser\Parser;
 use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 class LexaAdmin extends Controller
@@ -2813,7 +2814,8 @@ class LexaAdmin extends Controller
             if(!empty($_GET['page'])) {
                 $page=intval($_GET['page']);
             }
-            $max_pages=ceil($users0->first()->count/$countOnPage);
+            $total_users = DB::query()->fromSub($users0, 'drivers')->count();
+            $max_pages=ceil($total_users/$countOnPage);
             $users = $users->orderBy(DB::raw("(case when routes_priority.count_delivery is null then 0 else routes_priority.count_delivery end)+(case when routes_priority_logs.count_delivered is null then 0 else routes_priority_logs.count_delivered end)"),"desc")->orderBy("routes_priority.count_delivery","asc");
             $pages = array();
             if($page>2){
@@ -9608,7 +9610,7 @@ class LexaAdmin extends Controller
     }    
 
     public function reportsBilling() {
-        $payments = DB::table('pharmacy_payments')->join("pharmacys","pharmacy_payments.pharmacy_id","=","pharmacys.id")->leftJoin("invoices","pharmacy_payments.invoice_id","=","invoices.id")->select("pharmacy_payments.id","invoices.id as invoice_id","pharmacy_payments.type","pharmacy_payments.created","pharmacys.name","pharmacy_payments.pharmacy_id","invoices.date_from","invoices.date_to","pharmacy_payments.amount","invoices.count");
+        $payments = DB::table('pharmacy_payments')->join("pharmacys","pharmacy_payments.pharmacy_id","=","pharmacys.id")->leftJoin("invoices","pharmacy_payments.invoice_id","=","invoices.id")->select("pharmacy_payments.id","invoices.id as invoice_id","pharmacy_payments.type","pharmacy_payments.created","pharmacys.name","pharmacy_payments.pharmacy_id","pharmacy_payments.transaction_id","invoices.date_from","invoices.date_to","pharmacy_payments.amount","invoices.count");
         $countOnPage=30;
         $max_pages=ceil($payments->count()/$countOnPage);
         $page=1;
@@ -9630,15 +9632,28 @@ class LexaAdmin extends Controller
             array_push($pages,array("id"=>$page+2,"class"=>'btn-primary'));
         }
         $payments = $payments->orderBy('pharmacy_payments.id','desc')->offset(($page-1)*$countOnPage)->limit($countOnPage)->get();
-        $client = new \Square\SquareClient([
-            'accessToken' => config('app.SQUARE_ACCESS_TOKEN'),
-            'environment' => config('app.SQUARE_ENVIRONMENT'),
-        ]);
+        $client = null;
         foreach($payments as $key=>$payment) {
             if(!empty($payment->transaction_id)){
-                $api_response = $client->getPaymentsApi()->getPayment($payment->transaction_id);
-                if($api_response->isSuccess()) {
-                    $payments[$key]->status = $result->getPayment()->getStatus();
+                try {
+                    if($client === null) {
+                        $client = new \Square\SquareClient([
+                            'accessToken' => config('app.SQUARE_ACCESS_TOKEN'),
+                            'environment' => config('app.SQUARE_ENVIRONMENT'),
+                        ]);
+                    }
+                    $api_response = $client->getPaymentsApi()->getPayment($payment->transaction_id);
+                    if($api_response->isSuccess()) {
+                        $result = $api_response->getResult();
+                        if($result->getPayment() !== null) {
+                            $payments[$key]->status = $result->getPayment()->getStatus();
+                        }
+                    }
+                } catch (\Throwable $exception) {
+                    Log::warning('Unable to retrieve Square payment status.', [
+                        'payment_id' => $payment->id,
+                        'exception' => $exception,
+                    ]);
                 }
             }
         }
