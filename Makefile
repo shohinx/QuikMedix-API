@@ -1,4 +1,20 @@
-.PHONY: recover-laravel composer-lock prepare-storage
+.PHONY: run recover-laravel composer-lock prepare-storage
+
+HOST ?= 127.0.0.1
+PORT ?= 8000
+
+check-php:
+	@php -r 'exit(PHP_MAJOR_VERSION === 8 && PHP_MINOR_VERSION === 4 ? 0 : 1);' \
+		|| { echo "PHP 8.4.x is required. Current version: $$(php -r 'echo PHP_VERSION;')"; exit 1; }
+
+run: check-php prepare-storage
+
+# Starts Laravel's local development server.
+# Override the address when needed, for example: make run HOST=0.0.0.0 PORT=8080
+run: prepare-storage
+	@test -f .env || { echo "Missing .env file. Create and configure it before running the application."; exit 1; }
+	@test -f vendor/autoload.php || { echo "Missing Composer dependencies. Run 'composer install' first."; exit 1; }
+	@php artisan serve --host=$(HOST) --port=$(PORT)
 
 # Recreates the Laravel files that were omitted from the downloaded project.
 # This will not overwrite existing files.
