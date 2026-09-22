@@ -1,11 +1,11 @@
-.PHONY: run recover-laravel composer-lock prepare-storage
+.PHONY: run recover-laravel composer-lock prepare-storage check-php
 
 HOST ?= 127.0.0.1
 PORT ?= 8000
 
 check-php:
-	@php -r 'exit(PHP_MAJOR_VERSION === 8 && PHP_MINOR_VERSION === 4 ? 0 : 1);' \
-		|| { echo "PHP 8.4.x is required. Current version: $$(php -r 'echo PHP_VERSION;')"; exit 1; }
+	@php -r 'exit(PHP_MAJOR_VERSION === 8 && PHP_MINOR_VERSION >= 4 ? 0 : 1);' \
+		|| { echo "PHP >=8.4 <9.0 is required. Current version: $$(php -r 'echo PHP_VERSION;')"; exit 1; }
 
 # Frees the configured TCP port and starts Laravel's local development server.
 # Override the address when needed, for example: make run HOST=0.0.0.0 PORT=8080

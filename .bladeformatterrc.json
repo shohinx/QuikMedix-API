@@ -1,0 +1,13 @@
+{
+    "indentSize": 4,
+    "wrapLineLength": 100,
+    "wrapAttributes": "force-expand-multiline",
+    "wrapAttributesMinAttrs": 2,
+    "indentInnerHtml": true,
+    "endWithNewLine": true,
+    "endOfLine": "LF",
+    "useTabs": false,
+    "sortTailwindcssClasses": false,
+    "sortHtmlAttributes": "none",
+    "noMultipleEmptyLines": true
+}
